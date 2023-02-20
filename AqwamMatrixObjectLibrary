@@ -1,0 +1,956 @@
+--[[
+
+	--------------------------------------------------------------------
+
+	Version 1.0
+
+	Aqwam's Roblox Matrix Object Library (AR-MatrixOL)
+
+	Author: Aqwam Harish Aiman
+	
+	YouTube: https://www.youtube.com/channel/UCUrwoxv5dufEmbGsxyEUPZw
+	
+	LinkedIn: https://www.linkedin.com/in/aqwam-harish-aiman/
+	
+	--------------------------------------------------------------------
+	
+	DO NOT SELL, RENT, DISTRIBUTE THIS LIBRARY
+	
+	DO NOT SELL, RENT, DISTRIBUTE MODIFIED VERSION OF THIS LIBRARY
+	
+	DO NOT CLAIM OWNERSHIP OF THIS LIBRARY
+	
+	GIVE CREDIT AND SOURCE WHEN USING THIS LIBRARY IF YOUR USAGE FALLS UNDER ONE OF THESE CATEGORIES:
+	
+		- USED AS A VIDEO OR ARTICLE CONTENT
+		- USED AS COMMERCIAL OR PUBLIC USE 
+	
+	--------------------------------------------------------------------
+
+--]]
+
+Matrix = {}
+
+Matrix.__index = Matrix
+
+local function onDotProductError(matrix1Column, matrix2Row)
+
+	local errorMessage = "Incompatible Matrix Dimensions: " .. matrix1Column .. " Column(s), " .. matrix2Row .. " Row(s)."
+
+	error(errorMessage)
+
+end
+
+local function extractColumnFromMatrix(matrix, column)
+
+	local maxRows = #matrix
+
+	local result = {}
+
+	for row = 1, maxRows, 1 do
+
+		table.insert(result, matrix[row][column])
+
+	end
+
+	return result
+
+end
+
+local function multiplyRowVector(vector1, vector2)
+
+	local result = {}
+
+	for i = 1, #vector1, 1 do
+
+		table.insert(result, vector1[i] * vector2[i])
+
+	end
+
+	return  result
+
+end
+
+local function calculateVectorSum(vector)
+
+	local sum = 0
+
+	for i, value in ipairs(vector) do
+
+		sum += value
+
+	end
+
+	return sum
+
+end
+
+local function checkIfCanDotProduct(matrix1, matrix2)
+
+	local matrix1Column = #matrix1[1]
+	local matrix2Row = #matrix2
+
+	if (matrix1Column ~= matrix2Row) then
+
+		onDotProductError(matrix1Column, matrix2Row)
+
+	end
+
+end
+
+local function applyOperator(operator, x, y)
+	
+	if (operator == "+") then
+		
+		return (x + y)
+		
+	elseif (operator == "-") then
+		
+		return (x - y)
+		
+	elseif (operator == "*") then
+
+		return (x * y)
+		
+	elseif (operator == "/") then
+		
+		return (x / y)
+		
+	elseif (operator == "^") then
+
+		return (x ^ y)
+		
+	elseif (operator == "log") then
+
+		return math.log(x, y)
+		
+	end
+	
+end
+
+local function isMatrix(argument)
+	
+	local isMatrixRow = false
+
+	local isMatrixColumn = false
+	
+	pcall(function()
+		
+		isMatrixRow = (type(argument) == "table")
+		
+		isMatrixColumn = (type(argument[1]) == "table")
+		
+	end)
+	
+	return (isMatrixRow and isMatrixColumn)
+	
+end
+
+local function isMatrixSizeArray(argument)
+	
+	local isArray = false
+	
+	local isValue = false
+	
+	pcall(function()
+		
+		isArray = (type(argument) == "table")
+
+		isValue = (type(argument[1]) == "number")
+		
+	end)
+	
+	return (isArray and isValue)
+	
+end
+
+local function isMatrixSize(argument)
+	
+	local isValue = (type(argument) == "number")
+	
+	return isValue
+	
+end
+
+local function isValue(argument)
+
+	local isValue = (type(argument) == "number")
+
+	return isValue
+
+end
+
+local function createMatrix(numberOfRows, numberOfColumns, matrixValues)
+	
+	matrixValues = matrixValues or 0
+	
+	local matrix = {}
+	
+	for row = 1, numberOfRows, 1 do
+		
+		matrix[row] = {}
+		
+		for column = 1, numberOfColumns, 1 do
+			
+			matrix[row][column] = matrixValues
+			
+		end
+		
+	end
+	
+	return matrix
+	
+end
+
+local function fetchRandomValueFromArray(array)
+	
+	local numberOfValues = #array
+	
+	local randomNumber = Random.new():NextInteger(1, numberOfValues)
+	
+	return array[randomNumber]
+	
+end
+
+local function generateNumberArraySequence(number)
+	
+	local numberArray = {}
+	
+	for i = 1, number, 1 do
+		
+		table.insert(numberArray, i)
+		
+	end
+	
+	return numberArray
+	
+end
+
+function Matrix.new(argument1, argument2)
+	
+	local newMatrix = {}
+	
+	setmetatable(newMatrix, Matrix)
+	
+	local isMatrix = isMatrix(argument1)
+	
+	local isMatrixSizeArray = isMatrixSizeArray(argument1)
+	
+	local isMatrixSize = isMatrixSize(argument1)
+	
+	if isMatrix then
+	
+		newMatrix.MatrixValues = argument1
+		
+	elseif isMatrixSizeArray then
+		
+		newMatrix.MatrixValues = createMatrix(argument1[1], argument1[2], argument2)
+		
+	elseif isMatrixSize then
+		
+		newMatrix.MatrixValues = createMatrix(argument1, argument1, argument2)
+		
+	end
+	
+	newMatrix.Rows = #newMatrix.MatrixValues
+	newMatrix.Columns = #newMatrix.MatrixValues[1]
+		
+	return newMatrix
+		
+end
+
+function Matrix.identity(matrixSize)
+	
+	local newMatrix = {}
+
+	setmetatable(newMatrix, Matrix)
+	
+	newMatrix.MatrixValues = createMatrix(matrixSize, matrixSize)
+	
+	for row = 1, matrixSize, 1 do
+		
+		for column = 1, matrixSize, 1 do
+			
+			if (row == column) then newMatrix.MatrixValues[row][column] = 1 end
+
+		end
+		
+	end
+	
+	newMatrix.Rows = matrixSize
+	newMatrix.Columns = matrixSize
+	
+	return newMatrix
+	
+end
+
+function Matrix:getMatrixValues()
+	
+	return self.MatrixValues
+	
+end
+
+function Matrix:getSize()
+	
+	return {self.Rows, self.Columns}
+	
+end
+
+function Matrix:getRowSize()
+
+	return self.Rows
+
+end
+
+function Matrix:getColumnSize()
+
+	return self.Columns
+
+end
+
+local function applyOperationMatrixWithScalar(operator, MatrixValues, scalar)
+	
+	local rowSize = #MatrixValues
+	
+	local columnSize = #MatrixValues[1]
+
+	local result = createMatrix(rowSize, columnSize)
+
+	for row = 1, rowSize, 1 do
+
+		for column = 1, columnSize, 1 do
+
+			result[row][column] = applyOperator(operator, MatrixValues[row][column], scalar)
+
+		end	
+
+	end
+
+	return result
+
+end
+
+local function applyOperationMatrixWithMatrix(operator, Matrix1Values, Matrix2Values)
+	
+	local rowSize = #Matrix1Values
+	
+	local columnSize = #Matrix1Values[1]
+
+	local result = createMatrix(rowSize, columnSize)
+
+	for row = 1, rowSize, 1 do
+
+		for column = 1,  columnSize, 1 do
+
+			result[row][column] = applyOperator(operator, Matrix1Values[row][column], Matrix2Values[row][column])
+
+		end	
+
+	end
+
+	return result
+
+end
+
+local function applyOperationToMatrixWithScalarOrMatrix(operator, value1, value2)
+	
+	local result
+	
+	local isScalar = isValue(value2)
+
+	if isScalar then
+		
+		result = applyOperationMatrixWithScalar(operator, value1, value2)
+		
+	else
+		
+		result = applyOperationMatrixWithMatrix(operator, value1, value2)
+
+	end
+	
+	return result
+	
+end
+
+
+function Matrix:add(value)
+	
+	local Matrix1Values = self.MatrixValues
+
+	local Matrix2Values
+	
+	local isMatrix = pcall(function() Matrix2Values = value:getMatrixValues() end)
+
+	local result
+
+	local success
+
+	if (isMatrix == false) then Matrix2Values = value end
+
+	success = pcall(function()
+
+		result = applyOperationToMatrixWithScalarOrMatrix("+", Matrix1Values, Matrix2Values)
+
+	end)
+
+	if not success then error("Incompatible matrices!") end
+	
+	return Matrix.new(result)
+	
+end
+
+function Matrix:subtract(value)
+
+	local Matrix1Values = self.MatrixValues
+
+	local Matrix2Values
+
+	local isMatrix = pcall(function() Matrix2Values = value:getMatrixValues() end)
+
+	local result
+
+	local success
+
+	if (isMatrix == false) then Matrix2Values = value end
+
+	success = pcall(function()
+
+		result = applyOperationToMatrixWithScalarOrMatrix("-", Matrix1Values, Matrix2Values)
+
+	end)
+
+	if not success then error("Incompatible matrices!") end
+
+	return Matrix.new(result)
+
+end
+
+function Matrix:multiply(value)
+
+	local Matrix1Values = self.MatrixValues
+
+	local Matrix2Values
+
+	local isMatrix = pcall(function() Matrix2Values = value:getMatrixValues() end)
+
+	local result
+
+	local success
+
+	if (isMatrix == false) then Matrix2Values = value end
+
+	success = pcall(function()
+
+		result = applyOperationToMatrixWithScalarOrMatrix("*", Matrix1Values, Matrix2Values)
+
+	end)
+
+	if not success then error("Incompatible matrices!") end
+
+	return Matrix.new(result)
+
+end
+
+function Matrix:divide(value)
+
+	local Matrix1Values = self.MatrixValues
+
+	local Matrix2Values
+
+	local isMatrix = pcall(function() Matrix2Values = value:getMatrixValues() end)
+
+	local result
+
+	local success
+
+	if (isMatrix == false) then Matrix2Values = value end
+
+	success = pcall(function()
+
+		result = applyOperationToMatrixWithScalarOrMatrix("/", Matrix1Values, Matrix2Values)
+
+	end)
+
+	if not success then error("Incompatible matrices!") end
+
+	return Matrix.new(result)
+
+end
+
+function Matrix:power(value)
+
+	local Matrix1Values = self.MatrixValues
+
+	local Matrix2Values
+
+	local isMatrix = pcall(function() Matrix2Values = value:getMatrixValues() end)
+
+	local result
+
+	local success
+
+	if (isMatrix == false) then Matrix2Values = value end
+
+	success = pcall(function()
+
+		result = applyOperationToMatrixWithScalarOrMatrix("^", Matrix1Values, Matrix2Values)
+
+	end)
+
+	if not success then error("Incompatible matrices!") end
+
+	return Matrix.new(result)
+
+end
+
+function Matrix:log(value)
+
+	local Matrix1Values = self.MatrixValues
+
+	local Matrix2Values
+
+	local isMatrix = pcall(function() Matrix2Values = value:getMatrixValues() end)
+
+	local result
+
+	local success
+
+	if (isMatrix == false) then Matrix2Values = value end
+
+	success = pcall(function()
+
+		result = applyOperationToMatrixWithScalarOrMatrix("log", Matrix1Values, Matrix2Values)
+
+	end)
+
+	if not success then error("Incompatible matrices!") end
+
+	return Matrix.new(result)
+
+end
+
+function Matrix:getMinkowskiDistance(power)
+	
+	local sum = 0
+	
+	for row = 1, self.Rows, 1 do
+
+		for column = 1, self.Columns, 1 do
+
+			sum += math.pow(self.MatrixValues[row][column], power)
+
+		end	
+
+	end
+	
+	sum = math.pow(sum, (1/power))
+	
+	return sum
+	
+end
+
+function Matrix:getEuclideanDistance()
+
+	local sum = 0
+
+	for row = 1, self.Rows, 1 do
+
+		for column = 1, self.Columns, 1 do
+
+			sum += math.pow(self.MatrixValues[row][column], 2)
+
+		end	
+
+	end
+
+	sum = math.pow(sum, (1/2))
+
+	return sum
+
+end
+
+function Matrix:getManhattanDistance()
+
+	local sum = 0
+
+	for row = 1, self.Rows, 1 do
+
+		for column = 1, self.Columns, 1 do
+
+			sum += math.abs(self.MatrixValues[row][column])
+
+		end	
+
+	end
+
+	return sum
+
+end
+
+function Matrix:applyFunction(functionToApply)
+	
+	local result = createMatrix(self.Rows, self.Columns)
+
+	for row = 1, self.Rows, 1 do
+
+		for column = 1, self.Columns, 1 do
+
+			result[row][column] += functionToApply(self.MatrixValues[row][column])
+
+		end	
+
+	end
+
+	return Matrix.new(result)
+	
+end
+
+function Matrix:transpose()
+	
+	local currentRowVector
+
+	local result = createMatrix(self.Columns, self.Rows)
+
+	for row = 1, self.Rows, 1 do
+
+		currentRowVector = self.MatrixValues[row]
+
+		for column = 1, #currentRowVector, 1 do
+
+			result[column][row] = currentRowVector[column]
+
+		end
+
+	end
+	
+	return Matrix.new(result)
+	
+end
+
+function Matrix:t()
+
+	local currentRowVector
+
+	local result = createMatrix(self.Columns, self.Rows)
+
+	for row = 1, self.Rows, 1 do
+
+		currentRowVector = self.MatrixValues[row]
+
+		for column = 1, #currentRowVector, 1 do
+
+			result[column][row] = currentRowVector[column]
+
+		end
+
+	end
+
+	return Matrix.new(result)
+
+end
+
+function Matrix:shuffle()
+	
+	local randomRowNumber
+	local randomRow
+
+	local randomColumnNumber
+	local randomColumn
+	
+	local randomNumber
+	
+	local result = createMatrix(self.Rows, self.Columns)
+	
+	local rowsThatHasNotBeenShuffled = generateNumberArraySequence(self.Rows)
+	local columnsThatHasNotBeenShuffled = generateNumberArraySequence(self.Columns)
+	
+	for row = 1, self.Rows, 1 do
+		
+		randomRowNumber = fetchRandomValueFromArray(rowsThatHasNotBeenShuffled)
+
+		for column = 1, self.Columns, 1 do
+
+			randomColumnNumber = fetchRandomValueFromArray(columnsThatHasNotBeenShuffled) 
+
+			result[row][column] = self.MatrixValues[randomRowNumber][randomColumnNumber]
+			
+			table.remove(columnsThatHasNotBeenShuffled, table.find(columnsThatHasNotBeenShuffled, randomColumnNumber))
+
+		end
+		
+		table.remove(rowsThatHasNotBeenShuffled, table.find(rowsThatHasNotBeenShuffled, randomRowNumber))
+
+	end
+	
+	return Matrix.new(result)
+	
+end
+
+function Matrix:shuffleColumns()
+	
+	local randomColumnNumber
+	
+	local result = createMatrix(self.Rows, self.Columns)
+	
+	local columnsThatHasNotBeenShuffled = generateNumberArraySequence(self.Columns)
+	
+	for column = 1, self.Columns, 1 do
+
+		randomColumnNumber = fetchRandomValueFromArray(columnsThatHasNotBeenShuffled) 
+
+		for row = 1, self.Rows, 1 do
+
+			result[row][column] = self.MatrixValues[row][column]
+
+		end
+
+		table.remove(columnsThatHasNotBeenShuffled, table.find(columnsThatHasNotBeenShuffled, randomColumnNumber))
+
+	end
+	
+	return Matrix.new(result)
+	
+end
+
+function Matrix:shuffleRows()
+	
+	local randomRowNumber
+	local randomRow
+	
+	local result = createMatrix(self.Rows, self.Columns)
+	
+	local rowsThatHasNotBeenShuffled = generateNumberArraySequence(self.Rows)
+	local columnsThatHasNotBeenShuffled = generateNumberArraySequence(self.Columns)
+		
+	for row = 1, self.Rows, 1 do
+			
+		randomRowNumber = fetchRandomValueFromArray(rowsThatHasNotBeenShuffled)
+			
+		randomRow = self.MatrixValues[randomRowNumber]
+			
+		result[row] = randomRow
+			
+		table.remove(rowsThatHasNotBeenShuffled, table.find(rowsThatHasNotBeenShuffled, randomRowNumber))
+			
+	end
+	
+	return Matrix.new(result)
+	
+end
+
+function Matrix:slice(rowsArray, columnsArray)
+	
+	local startingRow = rowsArray[1] or 1
+	
+	local endingRow = rowsArray[2] or (self.Rows)
+	
+	local startingColumn = columnsArray[1] or 1
+	
+	local endingColumn = columnsArray[2] or (#self.Columns)
+	
+	local rowSize = (endingRow - startingRow) + 1
+	
+	local columnSize = (endingColumn - startingColumn) + 1
+	
+	local result = createMatrix(rowSize, columnSize)
+	
+	local value
+	
+	for row = 0, (rowSize - 1), 1 do
+
+		for column = 0, (columnSize - 1), 1 do
+			
+			value = self.MatrixValues[startingRow + row][startingColumn + column]
+			
+			result[row + 1][column + 1] = value
+
+		end	
+
+	end
+	
+	return Matrix.new(result)
+	
+end
+
+function Matrix:verticalSum()
+
+	local result = createMatrix(1, self.Columns)
+
+	for row = 1, self.Rows, 1 do
+
+		for column = 1, self.Columns, 1 do
+
+			result[1][column] += self.MatrixValues[row][column]
+
+		end	
+
+	end
+
+	return Matrix.new(result)
+
+end
+
+function Matrix:horizontalSum()
+
+	local result = createMatrix(self.Rows, 1)
+
+	for row = 1, self.Rows, 1 do
+
+		for column = 1, self.Columns, 1 do
+
+			result[row][1] += self.MatrixValues[row][column]
+
+		end	
+
+	end
+	
+	return Matrix.new(result)
+end
+
+function Matrix:print()
+	
+	local text = "\n\n"
+
+	for row = 1, self.Rows, 1 do
+
+		text = text .. "{"
+
+		for column = 1, self.Columns, 1 do
+
+			text = text .. "\t" .. self.MatrixValues[row][column]
+
+		end
+
+		text = text .. "\t}\n\n"
+
+	end
+
+	print(text)
+	
+end
+
+
+function Matrix:dotProduct(Matrix2)
+
+	local result = {}
+
+	local matrix1Row = self.Rows
+	local matrix2Column = Matrix2:getColumnSize()
+
+	local extractedMatrix2Column
+	local multipliedRowVector
+	local calculatedVectorSum
+	
+	local Matrix1Values = self.MatrixValues
+	local Matrix2Values = Matrix2:getMatrixValues()
+
+	checkIfCanDotProduct(Matrix1Values, Matrix2Values)
+
+	for row = 1, matrix1Row, 1 do
+
+		result[row] = {}
+
+		for column = 1, matrix2Column, 1 do
+
+			extractedMatrix2Column = extractColumnFromMatrix(Matrix2Values, column)
+
+			multipliedRowVector = multiplyRowVector(Matrix1Values[row], extractedMatrix2Column)
+
+			calculatedVectorSum = calculateVectorSum(multipliedRowVector)
+
+			result[row][column] = calculatedVectorSum
+
+		end
+
+	end
+
+	if (#result == 1) and (#result[1] == 1) then
+
+		return result[1][1]
+
+	else
+
+		return Matrix.new(result)
+
+	end
+	
+end
+
+function Matrix:horizontalConcatenate(Matrix2)
+	
+	local Matrix1Values = self.Matrix
+	local Matrix2Values = Matrix2:getMatrixValues()
+
+	if (#Matrix1Values ~= #Matrix2Values) then error() end
+
+	local horizontalMiddleIndex = #Matrix1Values[1]
+
+	local result = {}
+
+	for row = 1, horizontalMiddleIndex, 1 do
+
+		result[row] = {}
+
+		for column = 1, #Matrix1Values[1], 1 do
+
+			result[row][column] = Matrix1Values[row][column]
+
+		end	
+
+	end
+
+	for row = 1, #Matrix2Values[1], 1 do
+
+		for column = 1, #Matrix2Values[1], 1 do
+
+			result[row][horizontalMiddleIndex + column] = Matrix2Values[row][column]
+
+		end	
+
+	end
+
+	return Matrix.new(result)
+
+end
+
+function Matrix:verticalConcatenate(Matrix2)
+	
+	local Matrix1Values = self.Matrix
+	local Matrix2Values = Matrix2:getMatrixValues()
+
+	if (#Matrix1Values[1] ~= #Matrix2Values[1]) then error() end
+
+	local verticalMiddleIndex = #Matrix1Values
+
+	local result = {}
+
+	for row = 1, verticalMiddleIndex, 1 do
+
+		result[row] = {}
+
+		for column = 1, #Matrix1Values[1], 1 do
+
+			result[row][column] = Matrix1Values[row][column]
+
+		end	
+
+	end
+
+	for row = 1, #Matrix2Values, 1 do
+
+		result[verticalMiddleIndex + row] = {}
+
+		for column = 1, #Matrix2Values[1], 1 do
+
+			result[verticalMiddleIndex + row][column] = Matrix2Values[row][column]
+
+		end	
+
+	end
+
+	return Matrix.new(result)
+
+end
+
+
+return Matrix
